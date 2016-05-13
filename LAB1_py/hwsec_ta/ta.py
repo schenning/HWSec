@@ -85,7 +85,8 @@ def main ():
     score = []
     start = 0x000000000000
     end   = 0xfc0000000000
- 
+    dick = {}
+    cnt=0 
     for sk in range(start, end+1,0x040000000000):
         for j in range(args.n):
        
@@ -97,15 +98,17 @@ def main ():
             H   = hamming_weight(sbo & 0xf0000000)
 
             if H ==0:
-                fast.append((t[j],sk))
+                fast.append(t[j])
+        #        dick{cnt} = t[j]
+                                   
             elif H ==4:
-                slow.append((t[j],sk))	
-        score.append(avg(fast[0]) - avg(slow))
+                slow.append(t[j])	
+        score.append(avg(fast) - avg(slow))
         print avg(fast) - avg(slow)
 #        print fast
 #        print slow
-		#slow = []
-        #fast = []   
+        slow = []
+        fast = []   
 # Open datafile <name> and store its content in global variables
 # <ct> and <t>.
 def read_datafile (name, n):
