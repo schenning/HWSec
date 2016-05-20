@@ -15,7 +15,7 @@ import argparse
 
 import des
 import km
-
+import operator
 
 
 def avg2(n1,n2):
@@ -26,6 +26,10 @@ def avg2(n1,n2):
 def avg (n):
     l = float(len(n))
     return sum(n)/l
+def index_max (n):
+    return max(xrange(len(n)), key=values.__getitem__)
+
+
 def main ():
     # ************************************************************************
     # * Before doing anything else, check the correctness of the DES library *
@@ -77,30 +81,49 @@ def main ():
     print sbo
 
     """ 
+    
+
+    b='110101'
     slow = []
     fast = []
     score = []
-    for sk in range(64):
-        for j in range(args.n-1):
+    start = 0x000000000000
+    end   = 0xfc0000000000
+    step = 0x040000000000
+    counter=[]
+    la=0
+    mask = 0xf0000000
+    key = []
+    #       0x0000000f;
+    for sbx in range(1):
+        for sk in range(start, end+1,step):
+            for j in range(args.n):
        
-            l16 = des.right_half(des.ip(ct[j]))
-            R  = des.e(l16)
-            print "l16, ", bin(sk)
-            print "R,   ", bin(R)
+                l16 = des.right_half(des.ip(ct[j]))
+                R48  = des.e(l16)
+                sbo = des.sboxes(R48^sk)
+                #print bin(sbo&mask)
+                H   = hamming_weight(sbo & mask)
 
-            sbo = des.sboxes(R ^sk)
-            sbo = bin(sbo)[2:8]
-            H   = hamming_weight(int(sbo))
-            if H ==0:
-                fast.append(t[j])
-                print "found a fast"
-            elif H ==4:
-                slow.append(t[j])	
-        #score.append(avg(fast) - avg(slow))
-#        print fast
-#        print slow
-		#slow = []
-        #fast = []   
+                if H ==0:
+                    fast.append(t[j])
+                elif H ==4:
+                    slow.append(t[j])	
+            score.append(avg(slow) - avg(fast))
+            counter.append(la)
+            la+=1
+        for i in range(len(score)):
+            print score[i], counter[i]
+        max_idx ,max_val = max(enumerate(score), key=operator.itemgetter(1)) #find max index
+        print max_idx, max_val
+        slow = []
+        fast = []
+        score=[]
+        counter = []
+        la  = 0
+#        mask = mask>>4  
+#        end = end >> 6
+#        step = step >>5
 # Open datafile <name> and store its content in global variables
 # <ct> and <t>.
 def read_datafile (name, n):
