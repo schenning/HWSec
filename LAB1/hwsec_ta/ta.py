@@ -94,9 +94,12 @@ def main ():
     la=0
     mask = 0xf0000000
     key = []
+    dic = {}
+    ki = 0
     #       0x0000000f;
-    for sbx in range(1):
-        for sk in range(start, end+1,step):
+    for sbx in range(6,43,6):
+        ki=0
+        for sk in range(start, end,step):
             for j in range(args.n):
        
                 l16 = des.right_half(des.ip(ct[j]))
@@ -110,17 +113,32 @@ def main ():
                 elif H ==4:
                     slow.append(t[j])	
             score.append(avg(slow) - avg(fast))
+            dic[ki] = sum(slow)/float(len(slow)) - sum(fast)/float(len(fast))
+            ki +=1
             counter.append(la)
             la+=1
-        for i in range(len(score)):
-            print score[i], counter[i]
-        max_idx ,max_val = max(enumerate(score), key=operator.itemgetter(1)) #find max index
-        print max_idx, max_val
+        maxdiff = max(dic.values())
+        for sla in dic.keys():
+            if dic[sla] == maxdiff:
+                print hex(sla)
+
+
+
+      #  for i in range(len(score)):
+      #      print score[i], counter[i]
+      #  max_idx ,max_val = max(enumerate(score), key=operator.itemgetter(1)) #find max index
+      #  print max_idx, max_val, hex(max_idx)
+
+        print '\n\n'
         slow = []
+        dic={}
         fast = []
         score=[]
         counter = []
-        la  = 0
+        la   = 0
+        end  = 0xfc0000000000 >> sbx
+        step = 0x040000000000 >> sbx
+        mask = mask >> 4 
 #        mask = mask>>4  
 #        end = end >> 6
 #        step = step >>5

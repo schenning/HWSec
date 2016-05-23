@@ -1,0 +1,16 @@
+Hypotosis
+
+H1: time is data dependent
+
+H2: attacker knwos * used by victim 
+
+H3: SNR good enough (randomization
+
+
+
+--------------------------------
+
+R x S = 1 mod N
+
+[(M x R)^D x S^D] mod N = M^D mod N
+     
