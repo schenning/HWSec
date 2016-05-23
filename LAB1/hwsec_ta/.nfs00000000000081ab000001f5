@@ -16,7 +16,7 @@ import argparse
 import des
 import km
 import operator
-import numpy as np
+
 
 
 import math
@@ -119,7 +119,6 @@ def new_attem():
     print sbo
 
     """ 
-    fast = np.zeros(shape=((args.m,2)))
     
     sbo=[]    
     mask = 0xf0000000
@@ -127,17 +126,8 @@ def new_attem():
     for k in range(0,args.n):
         sbo.append( des.sboxes(des.e(des.right_half(des.ip(ct[k])))^subkey))
     subkey  += 0x041041041041
-    
-    for k in range(arg.n):
-        mask = 0xf0000000
-        for sbox in range(8):
-            H = hamming_weight(sbo[k]&mask)
-            if H==0 or H==1:
-
-                
-
     for elem in sbo:
-        print 
+        print elem
 
 
 def main ():
