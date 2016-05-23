@@ -119,8 +119,10 @@ def new_attem():
     print sbo
 
     """ 
-    fast = np.zeros(shape=((args.m,2)))
-    
+    fast = np.zeros(shape=(8,64))
+    slow = np.zeros(shape=(8,64))
+
+        
     sbo=[]    
     mask = 0xf0000000
     subkey = 0x0
@@ -128,11 +130,15 @@ def new_attem():
         sbo.append( des.sboxes(des.e(des.right_half(des.ip(ct[k])))^subkey))
     subkey  += 0x041041041041
     
-    for k in range(arg.n):
-        mask = 0xf0000000
-        for sbox in range(8):
-            H = hamming_weight(sbo[k]&mask)
-            if H==0 or H==1:
+    for key in range(64):
+        for k in range(args.n):
+            mask = 0xf0000000
+            for sbox in range(8):
+                H = hamming_weight(sbo[k]&mask)
+                if H==0 or H==1:
+                    fast[sbox][key] = t[k]
+                if H==4 or H==3:
+                    slow[sbox][key] = t[k]
 
                 
 
