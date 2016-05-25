@@ -119,32 +119,87 @@ def new_attem():
     print sbo
 
     """ 
-    fast = np.zeros(shape=(8,64))
-    slow = np.zeros(shape=(8,64))
-
-        
-    sbo=[]    
+    slow = []
+    fast = []
+    sbo  = []
+    for i in range(0,8):
+        slow.append([]);
+        fast.append([])
+        for j in range(0,64):
+            fast[i].append([])
+            slow[i].append([])
+            sbo.append([]) 
     mask = 0xf0000000
     subkey = 0x0
-    for k in range(0,args.n):
-        sbo.append( des.sboxes(des.e(des.right_half(des.ip(ct[k])))^subkey))
-    subkey  += 0x041041041041
-    
+    for key in range(64):
+        for k in range(0,args.n):
+            sbo[key].append( des.sboxes(des.e(des.right_half(des.ip(ct[k])))^subkey))
+        subkey  += 0x041041041041
+    print args.n 
     for key in range(64):
         for k in range(args.n):
             mask = 0xf0000000
             for sbox in range(8):
-                H = hamming_weight(sbo[k]&mask)
+                H = hamming_weight(sbo[key][k]&mask)
                 if H==0 or H==1:
-                    fast[sbox][key] = t[k]
+                    fast[sbox][key].append(t[k])
+                    
                 if H==4 or H==3:
-                    slow[sbox][key] = t[k]
+                    slow[sbox][key].append(t[k])
 
-                
+                mask = mask >> 4            
+    print '\n'
+    losning = []
+    differance = np.zeros(shape=(8,64))
+    
 
-    for elem in sbo:
-        print 
+    #for elem in slow:
+    #    print slow
 
+
+    print slow[0][0]
+    for i in range(8):
+        for j in range(64):
+            differance[i][j] = avg(slow[i][j]) - avg(fast[i][j])
+            print differance[i][j] 
+        md = max(differance[i])
+        print md
+    for elem in differance:
+        print elem
+
+
+
+
+    """
+    for j in range(64): 
+        pass
+
+
+    losning =[]
+    for sbox in range(8):
+        print 'testing for box number: '  + str(sbox)
+        for key in range(64):
+            pass        
+
+    """
+    #x = slow.sum(axis=1)
+    #y = fast.sum(axis=1)
+    #print min(x)
+    #print 'x= ', x
+    
+
+    #for j in range(x.size):
+    #    diff[0][j] = x[j]-y[j]
+
+    #print diff
+#    for sbox in range(8):
+#        for key in range(64):
+#            print slow[sbox,key]
+#            diff[sbox][key] = slow.sum(axis=sbox) 
+#        print '\n'    
+        #diff[sbox][key] = sum(sum(slow[sbox,key] ))/ float(len(slow[sbox,key])) - sum(sum(fast[sbox,key]))/len(fast[sbox,key]) 
+        
+    #print diff
 
 def main ():
     # ************************************************************************
@@ -209,7 +264,10 @@ def main ():
         for j in range(0,64):
             fast[i].append([])
             slow[i].append([])
+    for elem in slow:
+        print elem
 
+    print len(slow[0])
     start = 0x000000000000
     end   = 0xfc0000000000
     step = 0x040000000000
@@ -217,7 +275,7 @@ def main ():
     la=0
     mask = 0xf0000000
     cnt = 0
-    
+    subkey = 0x0 
 
 
         
@@ -238,6 +296,13 @@ def main ():
                 mask = mask >> 4
         subkey  += 0x041041041041
     nokkel = []
+
+
+    for elem in slow: 
+        print elem
+    print len(slow)
+    print len(slow[0])
+    print len(slow[0])
     for sbox in range(8):
         print 'testing for bxnr ' + str(sbox)
 
