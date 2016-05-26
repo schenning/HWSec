@@ -34,7 +34,24 @@
 \maketitle
 
 \section{Introductoin}
-The implementation of the permutation code, \texttt{p\_permutation}, is a good target for a timing attack, because there is a strong dependence between the hamming weight of the value to be permuted and the time used by the code. This is because of the aditional 32 iteration loop that the permutation code enter if a bit is set. \\ \\ From an attackers point of view, this can be used to build up a timing model where the correlation between hamming weight and time consumed are beeing exploited. Because       
+The implementation of the permutation code, \texttt{p\_permutation}, is a good target for a timing attack, because there is a strong dependence between the hamming weight of the value to be permuted and the running time used. This is because of the aditional 32 iteration loop that the permutation code enter if a bit is set. \\ \\ From an attackers point of view, this can be used to build up a timing model where the correlation between hamming weight and time consumed are beeing exploited.       
+
+\section{The algorithm}
+ 
+\begin{itemize}
+\item Calculate the output of all 8 S-boxes with all possible keys, using an XOR operation with hexadecimal value of += \texttt{0x041041041041}.  
+\item  Used a masking pattern of \texttt{0xf0000000} to isolate each S-boxes bits and shifted the masking pattern appropriate to each S-box. 
+\item A multithreaded function calculated the hamming weight of all 8 S-boxes. The results with hamming weight HW = 0, 1  got stored in a \emph{slow} list and those with HW=3,4 got stored in a \emph{fast} list, respectivly.  Based on this, the maximum timing difference between the average time for the slow and fast list on each sbox were used to estimate the most likely subkey. 
+
+
+\end{itemize}
+
+
+\section{Discussion}
+Although this attack uses the easiest possible statistical model by using average timing difference, the code completes finds the correct key using \textasciitilde 3000 acquisitions on the generated ta.dat file. With the shared ta.dat file, it uses \textasciitilde 8000 acquisitions. This could have been done a whole lot better by using more advanced statistical tool, for instance Pearson Correlation. 
+
+\section{Improving the permutation function}
+To improve the permutation function there are necessary to remove branching because of hamming weight or keyword.      
 
 
 
