@@ -148,7 +148,6 @@ def new_attem():
                     slow[sbox][key].append(t[k])
 
                 mask = mask >> 4            
-    print '\n'
     losning = []
     differance = np.zeros(shape=(8,64))
     
@@ -163,12 +162,9 @@ def new_attem():
             differance[i][j] = avg(slow[i][j]) - avg(fast[i][j])
             print differance[i][j] 
         md = max(differance[i])
-        print md
-    for elem in differance:
-        print elem
+        #for subk in differance[]
 
-
-
+    
 
     """
     for j in range(64): 
@@ -298,11 +294,11 @@ def main ():
     nokkel = []
 
 
-    for elem in slow: 
-        print elem
-    print len(slow)
-    print len(slow[0])
-    print len(slow[0])
+   # for elem in slow: 
+   #     print elem
+   # print len(slow)
+   # print len(slow[0])
+#    print len(slow[0])
     for sbox in range(8):
         print 'testing for bxnr ' + str(sbox)
 
@@ -317,10 +313,13 @@ def main ():
 
 
 
-
+    print diff
+    print diff[0].keys()
+    print diff[2].keys()
+    print diff[0].values()
 
         
-        subkey += 0x041041041041
+        #subkey += 0x041041041041
         #f = open('workfile', 'w')
         #for i in range(len(score)):
         #    print score[i], counter[i]
@@ -377,7 +376,7 @@ def hamming_weight (v):
     return (((v + (v>>4) & 0xF0F0F0F0F0F0F0F) * 0x101010101010101) >> 56) & 0xFF
 
 if __name__ == "__main__":
-    #main ()
-    new_attem()
+    main ()
+    #new_attem()
     #test()
     print avg([1,2,3,4,5,6])

@@ -33,8 +33,8 @@
 
 \maketitle
 
-\begin{Introductoin}
-The implementation of the permutation code p_permutation is a good target for a timing attack, because there is a dependence between the hamming weight of the value to be permuted and the time used by the code. !!bedre setning!! The is because of a aditional 32 iteration loop all the one's go through. \\ \\ From an attackers point of view, this can be used to build up a timing model where the correlation between hamming weight and time consumed are beeing exploited. Because       
+\section{Introductoin}
+The implementation of the permutation code, \texttt{p\_permutation}, is a good target for a timing attack, because there is a strong dependence between the hamming weight of the value to be permuted and the time used by the code. This is because of the aditional 32 iteration loop that the permutation code enter if a bit is set. \\ \\ From an attackers point of view, this can be used to build up a timing model where the correlation between hamming weight and time consumed are beeing exploited. Because       
 
 
 
