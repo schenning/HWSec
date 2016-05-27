@@ -14,7 +14,7 @@
 \definecolor{mauve}{rgb}{0.58,0,0.82}
 
 \lstset{frame=tb,
-  language=python,
+  language=C,
   aboveskip=3mm,
   belowskip=3mm,
   showstringspaces=false,
@@ -40,7 +40,7 @@ The implementation of the permutation code, \texttt{p\_permutation}, is a good t
  
 \begin{itemize}
 \item Calculate the output of all 8 S-boxes with all possible keys, using an XOR operation with hexadecimal value of += \texttt{0x041041041041}.  
-\item  Used a masking pattern of \texttt{0xf0000000} to isolate each S-boxes bits and shifted the masking pattern appropriate to each S-box. 
+\item  Used a masking pattern of \texttt{0xf0000000} to isolate each S-boxes bits and shifted the masking pattern appropriate to each S-boxes output. 
 \item A multithreaded function calculated the hamming weight of all 8 S-boxes. The results with hamming weight HW = 0, 1  got stored in a \emph{slow} list and those with HW=3,4 got stored in a \emph{fast} list, respectivly.  Based on this, the maximum timing difference between the average time for the slow and fast list on each sbox were used to estimate the most likely subkey. 
 
 
@@ -50,8 +50,47 @@ The implementation of the permutation code, \texttt{p\_permutation}, is a good t
 \section{Discussion}
 Although this attack uses the easiest possible statistical model by using average timing difference, the code completes finds the correct key using \textasciitilde 3000 acquisitions on the generated ta.dat file. With the shared ta.dat file, it uses \textasciitilde 8000 acquisitions. This could have been done a whole lot better by using more advanced statistical tool, for instance Pearson Correlation. 
 
-\section{Improving the permutation function}
-To improve the permutation function there are necessary to remove branching because of hamming weight or keyword.      
+\section{Countermasure}
+In order to reduce the posibility for a timing attack, it's necessary to improve the permutation function. My first thought was to remove all branching dependent of hamming weight or keyword, but I realized that the quickest solution was to write an identical 32-iteration loop, such that the permutation code will have the same complexity regardless of the input. However, this makes the permutation code even more inefficient than it already was. See the code below.
+ 
+
+ 
+\begin{lstlisting}
+uint64_t
+des_p_ta(uint64_t val) {
+  uint64_t res;
+  int i, j, k,fake;
+
+  res = UINT64_C(0);
+  k = 0;
+  for(i = 1; i <= 32; i++) {
+    if(get_bit(i, val) == 1) {
+      for(j = 1; j <= 32; j++) {
+        if(p_table[j - 1] == i) { /* C array index starts at 0, not 1 */
+          k = j;
+        }
+      }
+      res = set_bit(k, res);
+    }
+
+    else if(get_bit(i,val)== 0){ /* This is a dummy branch */
+      for (j=1;j<=32; j++){
+         if (p_table[j-1] ==i){
+             fake = j;
+         }
+      }
+    }
+    fake = set_bit(1,1);
+  }
+  return res;
+}
+\end{lstlisting}
+
+With this improved permutation function, the algorithm can't find the correct key with 100000 acqusitions. It has to be mentioned that if the code was implemented using a better statistical tool, it may have found the correct key. 
+
+
+
+
 
 
 
