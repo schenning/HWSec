@@ -8,11 +8,11 @@
 ########################################################################
 
 # First name and last name of student #1, e.g.: student1="First Last"
-student1=""
+student1="Henning Schei"
 
 # e-mail address of student #1. Leave empty if same address as the one
 # used to send your work, e.g.: email1="first.last@eurecom.fr"
-email1=""
+email1="henninsc@stud.ntnu.no"
 
 # First name and last name of student #2. Leave empty if you are alone.
 student2=""

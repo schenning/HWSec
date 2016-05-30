@@ -9,6 +9,7 @@
 #
 
 CC		:= gcc
+SHELL       := bash
 CFLAGS		:= -Wall -c
 OPT		:= -O3
 PYCFLAGS	:= -std=c99 -fPIC -DPYTHON_LIB $(shell python-config --cflags)
@@ -24,7 +25,6 @@ PYSOS		:= des.so km.so
 PYCS		:= $(patsubst %.py,%.pyc,$(wildcard *.py))
 PYOBJS		:= $(patsubst src/%.c,src/PyC_%.o,$(wildcard src/*.c))
 DATA		:= ta.dat ta.key
-
 .PHONY: help all clean ultraclean check archive
 
 define HELP_message
