@@ -52,8 +52,20 @@ force_bit(int position, int value, uint64_t val);
 
 /* Applies the P permutation to a 32 bits word and returns the result as another
  * 32 bits word. */
-uint64_t
-des_p_ta(uint64_t val) {
+
+
+uint64_t des_p_ta(uint64_t val){
+    uint64_t res = 0;
+    int i, target_value, target_position;
+    for (i = 1; i <= 32; i++) { /* for bit in the result*/
+        target_position = p_table[i-1];
+        target_value = get_bit(target_position, val);
+        res = force_bit(i, target_value, res);
+    }
+    return res;
+}
+
+uint64_t des_p_ta_given(uint64_t val) {
   uint64_t res;
   int i, j, k;
 

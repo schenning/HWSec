@@ -55,7 +55,7 @@ force_bit(int position, int value, uint64_t val);
 uint64_t
 des_p_ta(uint64_t val) {
   uint64_t res;
-  int i, j, k;
+  int i, j, k,fake;
 
   res = UINT64_C(0);
   k = 0;
@@ -68,10 +68,32 @@ des_p_ta(uint64_t val) {
       }
       res = set_bit(k, res);
     }
+    
+    else if(get_bit(i,val)== 0){ /* This is a dummy branch */ 
+      for (j=1;j<=32; j++){
+         if (p_table[j-1] ==i){
+             fake = j;
+         }
+
+      }
+
+
+    }
   }
   return res;
 }
 
+uint64_t des_p_ta (uint64_t val)
+{
+    uint64_t res = 0;
+    int i, target_value, target_position;
+    for (i = 1; i <= 32; i++) { /* for bit in the result*/
+        target_position = p_table[i-1];
+        target_value = get_bit(target_position, val);
+        res = force_bit(i, target_value, res);
+    }
+    return res;
+}
 /* Returns the value of a given bit (0 or 1) of a 32 bits word. Positions are
  * numbered as in the DES standard: 1 is the leftmost and 32 is the rightmost.
  * */

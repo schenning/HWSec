@@ -13,6 +13,11 @@ import traces
 p_table = [16, 7, 20, 21, 29, 12, 28, 17, 1, 15, 23, 26, 5, 18, 31, 10, 2, 8, 24, 14, 32, 27, 3, 9, 19, 13, 30, 6, 22, 11, 4, 25]
 
 
+def hamming_weight (v):
+    v = v - ((v>>1) & 0x5555555555555555)
+    v = (v & 0x3333333333333333) + ((v>>2) & 0x3333333333333333)
+    return (((v + (v>>4) & 0xF0F0F0F0F0F0F0F) * 0x101010101010101) >> 56) & 0xFF
+
 
 def main ():
     # ************************************************************************
@@ -141,6 +146,14 @@ def decision (ct, target_bit):
 # peak), best_idx (index of sample with maximum value in best DPA trace) and
 # best_max (value of sample with maximum value in best DPA trace).
 def dpa_attack (ctx, target_bit):
+    
+
+
+
+    return dpa, best_guess, best_max, best_idx
+
+
+def dpa_attack_suck (ctx, target_bit):
     t0 = [[0.0] * ctx.l] * 64
     n0 = [0] * 64
     t1 = [[0.0] * ctx.l] * 64

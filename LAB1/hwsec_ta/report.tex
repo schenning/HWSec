@@ -33,7 +33,7 @@
 
 \maketitle
 
-\section{Introductoin}
+\section{Introduction}
 The implementation of the permutation code, \texttt{p\_permutation}, is a good target for a timing attack, because there is a strong dependence between the hamming weight of the value to be permuted and the running time used. This is because of the aditional 32 iteration loop that the permutation code enter if a bit is set. \\ \\ From an attackers point of view, this can be used to build up a timing model where the correlation between hamming weight and time consumed are beeing exploited.       
 
 \section{The algorithm}
@@ -43,12 +43,12 @@ This is a breif overview of the operations of the algorithm:
 \begin{itemize}
 \item Calculate the output of all 8 S-boxes simutainiously with all possible keys, using an XOR operation with hexadecimal value of += \texttt{0x041041041041}.  
 \item  Used a masking pattern of \texttt{0xf0000000} to isolate each S-boxes bits and shifted the masking pattern appropriate to each S-boxes output. 
-\item A multithreaded function calculated the hamming weight of all 8 S-boxes. The results with hamming weight HW = 0, 1  got stored in a \emph{slow} list and those with HW=3,4 got stored in a \emph{fast} list, respectivly.  Based on this, the maximum timing difference between the average time for the slow and fast list on each sbox were used to estimate the most likely subkey.
+\item A multithreaded function calculated the hamming weight of all 8 S-boxes. The results with hamming weight HW = 0, 1  got stored in a \emph{fast} list and those with HW=3,4 got stored in a \emph{slow} list, respectivly.  Based on this, the maximum timing difference between the average time for the slow and fast list on each sbox were used to estimate the most likely subkey.
 \end{itemize}
 
 
 \section{Discussion}
-Although this attack uses the easiest possible statistical model by using average timing difference, the code completes finds the correct key using \textasciitilde 3000 acquisitions on the generated ta.dat file. With the shared ta.dat file, it uses \textasciitilde 8000 acquisitions. This could have been done a whole lot better by using more advanced statistical tool, for instance Pearson Correlation. 
+Although this attack uses the easiest possible statistical model by using average timing difference, the code finds the correct key using \textasciitilde 3000 acquisitions on the generated ta.dat file. With the shared ta.dat file, it uses \textasciitilde 8000 acquisitions. This could have been done a whole lot better by using more advanced statistical tool, for instance Pearson Correlation. 
 
 \section{Countermasure}
 In order to reduce the posibility for a timing attack, it's necessary to improve the permutation function. My first thought was to remove all branching dependent of hamming weight or keyword, but I realized that the quickest solution was to write an identical 32-iteration loop, such that the permutation code will have the same complexity regardless of the input. However, this makes the permutation code even more inefficient than it already was. See the code below.
@@ -87,14 +87,6 @@ des_p_ta(uint64_t val) {
 \end{lstlisting}
 
 With this improved permutation function, the algorithm can't find the correct key with 100000 acqusitions. It has to be mentioned that if the code was implemented using a better statistical tool, it may have found the correct key. 
-
-
-
-
-
-
-
-
 
 \end{document}
 
