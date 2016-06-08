@@ -1,22 +1,34 @@
 #! /usr/bin/env python2
-
+import tr_pcc
 import sys
 import argparse
-
 import des
 import traces
-
+import itertools
+import operator
 # The P permutation table, as in the standard. The first entry (16) is the
 # position of the first (leftmost) bit of the result in the input 32 bits word.
 # Used to convert target bit index into SBox index (just for printed summary
 # after attack completion).
 p_table = [16, 7, 20, 21, 29, 12, 28, 17, 1, 15, 23, 26, 5, 18, 31, 10, 2, 8, 24, 14, 32, 27, 3, 9, 19, 13, 30, 6, 22, 11, 4, 25]
 
-
 def hamming_weight (v):
     v = v - ((v>>1) & 0x5555555555555555)
     v = (v & 0x3333333333333333) + ((v>>2) & 0x3333333333333333)
     return (((v + (v>>4) & 0xF0F0F0F0F0F0F0F) * 0x101010101010101) >> 56) & 0xFF
+
+
+def hamming_distance(n1,n2):
+    return hamming_weight(n1^n2)
+
+
+"""def hamming_distance(n1,n2):
+    n1 = bin(n1)[2:]
+    n2 = bin(n2)[2:]
+    zf = max(len(n1),len(n2)) 
+    return sum(itertools.imap(str.__ne__,n1.zfill(zf),n2.zfill(zf)))
+"""
+
 
 
 def main ():
@@ -62,9 +74,9 @@ def main ():
     # ***************************************************************
     # * Attack target bit in L15=R14 with P. Kocher's DPA technique *
     # ***************************************************************
-    dpa, best_guess, best_max, best_idx = dpa_attack (ctx, args.target_bit)
-
-
+    pcc, best_guess, best_max, best_idx = dpa_attack (ctx, args.target_bit)
+    #print >> sys.stderr, "target bit %d" % args.target_bit
+    #dpa_attack(ctx, 1)
     # *******************************************************************************
     # * Print the 64 DPA traces in a data file named dpa.dat. Print corresponding   *
     # * gnuplot commands in a command file named dpa.cmd. All DPA traces are        *
@@ -73,24 +85,25 @@ def main ():
     # * and heaxdecimal forms of the 6 bits best guess.                             *
     # *******************************************************************************
     # Plot DPA traces in dpa.dat, gnuplot commands in dpa.cmd
-    traces.plot ("dpa", best_guess, dpa)
+    traces.plot ("dpa", best_guess, pcc)
 
 
     # *****************
     # * Print summary *
     # *****************
-    print >> sys.stderr, "Target bit: %d" % args.target_bit
-    print >> sys.stderr, "Target SBox: %d" % target_sbox
-    print >> sys.stderr, "Best guess: %d (0x%02x)" % (best_guess, best_guess)
-    print >> sys.stderr, "Maximum of DPA trace: %e" % best_max
-    print >> sys.stderr, "Index of maximum in DPA trace: %d" % best_idx
-    print >> sys.stderr, "DPA traces stored in file 'dpa.dat'. In order to plot them, type:"
-    print >> sys.stderr, "$ gnuplot -persist dpa.cmd"
+    #print >> sys.stderr, "Target bit: %d" % args.target_bit
+    #print >> sys.stderr, "Target SBox: %d" % target_sbox
+    #print >> sys.stderr, "Best guess: %d (0x%02x)" % (best_guess, best_guess)
+    #print >> sys.stderr, "Maximum of DPA trace: %e" % best_max
+    #print >> sys.stderr, "Index of maximum in DPA trace: %d" % best_idx
+    #print >> sys.stderr, "DPA traces stored in file 'dpa.dat'. In order to plot them, type:"
+    #print >> sys.stderr, "$ gnuplot -persist dpa.cmd"
 
     # ************************
     # * Print last round key *
     # ************************
     rk = 0x000000000000
+    
     print >> sys.stderr, "Last round key (hex):"
     print ("0x%012X" % rk)
 
@@ -132,12 +145,27 @@ def decision (ct, target_bit):
     d = []
     # For all guesses (64). rk is a 48 bits last round key with all 6-bits
     # subkeys equal to current guess g (nice trick, isn't it?).
+
+    
     for g in xrange (64):
         rk = g * 0x041041041041
+        print >> sys.stderr, "binary version of rk is %s" % bin(rk)[2:].zfill(64)
         l15 = r16 ^ des.p (des.sboxes (er15 ^ rk))          # Compute L15
         d.append ((l15 >> (32 - target_bit)) & 1)           # Extract value of target bit
 
+    #print >> sys.stderr, "l15 %d" % l15
+    #print >> sys.stderr, "Binary version %s" % bin(l15)
     return d
+
+
+def tr_max(l, t, idx_in):
+    maks = t[0]
+    idx = 0
+    for i in range(1,l):
+        if t[i]> maks:
+             maks = t[i]
+             idx  = i
+    return maks, idx, idx_in
 
 
 
@@ -146,14 +174,56 @@ def decision (ct, target_bit):
 # peak), best_idx (index of sample with maximum value in best DPA trace) and
 # best_max (value of sample with maximum value in best DPA trace).
 def dpa_attack (ctx, target_bit):
+    n = ctx.n
+    pcc = []
     
-
-
-
+    sbomask = 0xf0000000
+    k16 = 0
+    best_max=0
+    for sbox in range(8):
+        ctx_pcc = tr_pcc.pccContext(800,64) # pccContext object 
+        for i in range(ctx.n):
+            ct = ctx.c[i]
+            r16l16 = des.ip(ct)
+            l16    = des.right_half(r16l16)
+            r15    = l16
+            r16    = des.left_half(r16l16)
+            er15   = des.e(l16)
+            ctx_pcc.insert_x(ctx.t[i])
+            rk = 0
+            for j in range(64):
+                l15 = r16^des.p(des.sboxes(er15^rk))
+                r14 = l15
+                print r14 & des.p(sbomask)
+                print r15 & des.p(sbomask)
+                print r14   
+                ctx_pcc.insert_y(j, hamming_distance(r14 & des.p(sbomask), r15 & des.p(sbomask)))
+                rk+= 0x041041041041
+        ctx_pcc.consolidate()
+        for g in range(64):
+            pcc.append(ctx_pcc.get_pcc(g))
+            maks, idx, idx_in = tr_max(len(pcc), pcc, g) 
+            if (maks > best_max or g ==0):
+                best_max = maks
+                best_idx = idx_in
+                best_guess = g
+        print hex(best_guess) 
+        k16 = k16 <<6
+        k16 = k16 + best_guess
+        print hex(k16)
+        dpa = pcc
+        pcc=[]
+        sbomask = sbomask >> 4
+    print hex(k16)
+        
+        #maxs = max(l)
+        #idx  = [l.index(m) for l,m in zip (dpa, maxs)]
+        #print len(pcc)
+            #max = ctx.max ()
     return dpa, best_guess, best_max, best_idx
 
-
-def dpa_attack_suck (ctx, target_bit):
+    
+def dpa_attack2 (ctx, target_bit):
     t0 = [[0.0] * ctx.l] * 64
     n0 = [0] * 64
     t1 = [[0.0] * ctx.l] * 64
@@ -169,7 +239,9 @@ def dpa_attack_suck (ctx, target_bit):
             else:                                           # If decision on target bit is one
                 t1[g] = [a+b for a,b in zip (t1[g], t)]     # Accumulate power trace in one-set
                 n1[g] += 1                                  # Increment traces count for one-set
-
+    #DPA=[]
+    #for g in range(64):
+        #DPA[g] = sum(t1)/float(len(t1))           
     # Compute normalized one-set minus zero-set
     dpa = [[t1[g][i]/n1[g] - t0[g][i]/n0[g] for i in xrange (ctx.l)] for g in xrange (64)]
 
@@ -188,3 +260,4 @@ def dpa_attack_suck (ctx, target_bit):
 
 if __name__ == "__main__":
     main ()
+    #print hamming_distance(52,22)
