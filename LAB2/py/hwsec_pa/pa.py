@@ -63,18 +63,12 @@ def main ():
     ctx = read_datafile (args.datafile, args.n)
 
 
-    # *****************************************************************************
-    # * Compute and print average power trace. Store average trace in file        *
-    # * "average.dat" and gnuplot command in file "average.cmd". In order to plot *
-    # * the average power trace, type: $ gnuplot -persist average.cmd             *
-    # *****************************************************************************
-    average (ctx, "average")
 
 
     # ***************************************************************
     # * Attack target bit in L15=R14 with P. Kocher's DPA technique *
     # ***************************************************************
-    pcc, best_guess, best_max, best_idx = dpa_attack (ctx, args.target_bit)
+    dpa_attack (ctx, args.target_bit)
     #print >> sys.stderr, "target bit %d" % args.target_bit
     #dpa_attack(ctx, 1)
     # *******************************************************************************
@@ -85,7 +79,6 @@ def main ():
     # * and heaxdecimal forms of the 6 bits best guess.                             *
     # *******************************************************************************
     # Plot DPA traces in dpa.dat, gnuplot commands in dpa.cmd
-    traces.plot ("dpa", best_guess, pcc)
 
 
     # *****************
@@ -102,10 +95,7 @@ def main ():
     # ************************
     # * Print last round key *
     # ************************
-    rk = 0x000000000000
     
-    print >> sys.stderr, "Last round key (hex):"
-    print ("0x%012X" % rk)
 
 
 # A function to allocate cipher texts and power traces, read the
@@ -174,14 +164,12 @@ def tr_max(l, t, idx_in):
 # peak), best_idx (index of sample with maximum value in best DPA trace) and
 # best_max (value of sample with maximum value in best DPA trace).
 def dpa_attack (ctx, target_bit):
-    n = ctx.n
-    pcc = []
-    
+    pcc = [0]*64
     sbomask = 0xf0000000
-    k16 = 0
-    best_max=0
+    key=[]
+
     for sbox in range(8):
-        ctx_pcc = tr_pcc.pccContext(800,64) # pccContext object 
+        ctx_pcc = tr_pcc.pccContext(ctx.l,64) # pccContext object 
         for i in range(ctx.n):
             ct = ctx.c[i]
             r16l16 = des.ip(ct)
@@ -189,41 +177,34 @@ def dpa_attack (ctx, target_bit):
             r15    = l16
             r16    = des.left_half(r16l16)
             er15   = des.e(l16)
-            ctx_pcc.insert_x(ctx.t[i])
-            rk = 0
+            ctx_pcc.insert_x(ctx.t[i][:])
+            rk= 0x0 
             for j in range(64):
                 l15 = r16^des.p(des.sboxes(er15^rk))
                 r14 = l15
-                print r14 & des.p(sbomask)
-                print r15 & des.p(sbomask)
-                print r14   
-                ctx_pcc.insert_y(j, hamming_distance(r14 & des.p(sbomask), r15 & des.p(sbomask)))
+                ctx_pcc.insert_y(j, int(hamming_distance(r14 & des.p(sbomask), r15 & des.p(sbomask))))
                 rk+= 0x041041041041
         ctx_pcc.consolidate()
-        for g in range(64):
-            pcc.append(ctx_pcc.get_pcc(g))
-            maks, idx, idx_in = tr_max(len(pcc), pcc, g) 
-            if (maks > best_max or g ==0):
-                best_max = maks
-                best_idx = idx_in
-                best_guess = g
-        print hex(best_guess) 
-        k16 = k16 <<6
-        k16 = k16 + best_guess
-        print hex(k16)
-        dpa = pcc
-        pcc=[]
+        dpa = list([ctx_pcc.get_pcc(g) for g in range(64)])
+        maxs = [max(l) for l in dpa]
+        idx = [l.index(m) for l,m in zip (dpa, maxs)]
+
+        # Get best maximum
+        best_max = max (maxs)
+        best_guess = maxs.index (best_max)
+        best_idx = idx[best_guess]
         sbomask = sbomask >> 4
-    print hex(k16)
+        key.append(best_guess)
+        traces.plot('sboxnr' + str(sbox), -1, dpa) 
+    # Format output
+    res = ''
+    for i in range(len(key)):
+        res +=  bin(key[i])[2:].zfill(6)
+    print hex(int(res,2))
         
-        #maxs = max(l)
-        #idx  = [l.index(m) for l,m in zip (dpa, maxs)]
-        #print len(pcc)
-            #max = ctx.max ()
-    return dpa, best_guess, best_max, best_idx
 
     
-def dpa_attack2 (ctx, target_bit):
+def shit_i_dont_like (ctx, target_bit):
     t0 = [[0.0] * ctx.l] * 64
     n0 = [0] * 64
     t1 = [[0.0] * ctx.l] * 64
@@ -260,4 +241,3 @@ def dpa_attack2 (ctx, target_bit):
 
 if __name__ == "__main__":
     main ()
-    #print hamming_distance(52,22)
